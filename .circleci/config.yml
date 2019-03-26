@@ -10,4 +10,7 @@ jobs:
     steps:
       - checkout
 
-      - run: gcloud version
+      - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
+      - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
+      - run: gcloud container clusters get-credentials standard-cluster-1 --zone us-central1-a --project rxjs-fiddle
+      - run: kubeless function ls
