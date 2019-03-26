@@ -1,14 +1,13 @@
-# Javascript Node CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-javascript/ for more details
-#
 version: 2
 jobs:
   build:
     docker:
-      - image: circleci/node:7.10
+      - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.7
+        auth:
+          username: _json_key
+          password: ${GCLOUD_SERVICE_KEY}
 
     steps:
       - checkout
 
-      - run: echo "Helloooooo!"
+      - run: gcloud version
