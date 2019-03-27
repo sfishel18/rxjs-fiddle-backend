@@ -21,10 +21,10 @@ deployFunction() {
         hostname="localhost"
     fi
 
-    if [ -z kubeless function ls $name 2> /dev/null ]
+    if [ -z kubeless function ls $name --namespace $ns 2> /dev/null ]
     then
         kubeless function deploy "$name" --runtime nodejs8 --namespace "$ns" --handler "$name.main" --from-file "$name/$name.js" --dependencies "$name/package.json" --env "RXJS_FIDDLE_ENV=$ns,RXJS_FIDDLE_VERSION=$version"
-        kubeless trigger http update "$name" --function-name "$name" --hostname "$hostname" --path "$name" --namespace "$ns" --cors-enable
+        kubeless trigger http create "$name" --function-name "$name" --hostname "$hostname" --path "$name" --namespace "$ns" --cors-enable
     else
         kubeless function update "$name" --runtime nodejs8 --namespace "$ns" --handler "$name.main" --from-file "$name/$name.js" --dependencies "$name/package.json" --env "RXJS_FIDDLE_ENV=$ns,RXJS_FIDDLE_VERSION=$version"
         kubeless trigger http update "$name" --function-name "$name" --hostname "$hostname" --path "$name" --namespace "$ns"
