@@ -33,4 +33,4 @@ deployFunction() {
     fi
 }
 
-deployFunction "echofoo"
+deployFunction "echo"
