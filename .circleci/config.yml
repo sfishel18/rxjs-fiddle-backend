@@ -1,16 +1,30 @@
 version: 2
 jobs:
-  build:
+  Deploy to Staging:
     docker:
       - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.7
         auth:
           username: _json_key
           password: ${GCLOUD_SERVICE_KEY}
 
+    environment:
+      RXJS_FIDDLE_NS: rxjs-fiddle-staging
+      RXJS_FIDDLE_HOST: api-staging.rxjs-fiddle.com
+      RXJS_FIDDLE_VERSION: ${CIRCLE_SHA1}
+
     steps:
       - checkout
-
       - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials standard-cluster-1 --zone us-central1-a --project rxjs-fiddle
-      - run: kubeless function ls
+      - run: ./deploy-all.sh
+
+workflows:
+  version: 2
+
+  Deploy to Staging for Commits to Master:
+    jobs:
+      - Deploy to Staging:
+          filters:
+            branches:
+              only: master

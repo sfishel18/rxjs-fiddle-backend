@@ -2,7 +2,7 @@ const { of } = require("rxjs");
 const { delay } = require("rxjs/operators");
 
 const meta = {
-  environment: process.env.RXJS_FIDDLE_ENV,
+  ns: process.env.RXJS_FIDDLE_NS,
   version: process.env.RXJS_FIDDLE_VERSION
 };
 
