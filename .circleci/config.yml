@@ -10,14 +10,13 @@ jobs:
     environment:
       RXJS_FIDDLE_NS: rxjs-fiddle-staging
       RXJS_FIDDLE_HOST: api-staging.rxjs-fiddle.com
-      RXJS_FIDDLE_VERSION: ${CIRCLE_SHA1}
 
     steps:
       - checkout
       - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials standard-cluster-1 --zone us-central1-a --project rxjs-fiddle
-      - run: ./deploy-all.sh
+      - run: RXJS_FIDDLE_VERSION=${CIRCLE_SHA1} ./deploy-all.sh
 
 workflows:
   version: 2
