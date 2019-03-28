@@ -64,3 +64,15 @@ workflows:
           filters:
             branches:
               only: master
+
+  Deploy to Production for Tags:
+    jobs:
+      - Deploy:
+          ns: rxjs-fiddle-prod
+          host: api.rxjs-fiddle.com
+          version: ${CIRCLE_TAG}
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
