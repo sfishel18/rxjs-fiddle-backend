@@ -1,6 +1,28 @@
-version: 2
+version: 2.1
 jobs:
-  Deploy to Staging:
+  Bump Git Tag:
+    docker:
+      - image: gcr.io/rxjs-fiddle/ci/gitversion:0.0.8
+        auth:
+          username: _json_key
+          password: ${GCLOUD_SERVICE_KEY}
+
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "19:86:7d:89:ad:2b:24:95:d5:fe:59:1a:92:46:4f:02"
+      - checkout
+      - run: gitversion bump auto
+      - run: git push origin --tags
+  Deploy:
+    parameters:
+      ns:
+        type: string
+      host:
+        type: string
+      version:
+        type: string
+
     docker:
       - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.7
         auth:
@@ -8,22 +30,37 @@ jobs:
           password: ${GCLOUD_SERVICE_KEY}
 
     environment:
-      RXJS_FIDDLE_NS: rxjs-fiddle-staging
-      RXJS_FIDDLE_HOST: api-staging.rxjs-fiddle.com
+      RXJS_FIDDLE_NS: << parameters.ns >>
+      RXJS_FIDDLE_HOST: << parameters.host >>
+      RXJS_FIDDLE_VERSION: << parameters.version >>
 
     steps:
       - checkout
       - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials standard-cluster-1 --zone us-central1-a --project rxjs-fiddle
-      - run: RXJS_FIDDLE_VERSION=${CIRCLE_SHA1} ./deploy-all.sh
+      - run: ./deploy-all.sh
 
 workflows:
-  version: 2
-
   Deploy to Staging for Commits to Master:
     jobs:
-      - Deploy to Staging:
+      - Deploy:
+          ns: rxjs-fiddle-staging
+          host: api-staging.rxjs-fiddle.com
+          version: ${CIRCLE_SHA1}
+          filters:
+            branches:
+              only: master
+      - hold:
+          type: approval
+          requires:
+            - Deploy
+          filters:
+            branches:
+              only: master
+      - Bump Git Tag:
+          requires:
+            - hold
           filters:
             branches:
               only: master
