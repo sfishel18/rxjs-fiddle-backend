@@ -34,7 +34,7 @@ jobs:
       - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials standard-cluster-1 --zone us-central1-a --project rxjs-fiddle
-      - run: RXJS_FIDDLE_NS=<< parameters.ns >> RXJS_FIDDLE_HOST=<< parameters.host >> RXJS_FIDDLE_VERSION=<< parameters.version >>./deploy-all.sh
+      - run: RXJS_FIDDLE_NS=<< parameters.ns >> RXJS_FIDDLE_HOST=<< parameters.host >> RXJS_FIDDLE_VERSION=<< parameters.version >> ./deploy-all.sh
 
 workflows:
   Deploy to Staging for Commits to Master:
