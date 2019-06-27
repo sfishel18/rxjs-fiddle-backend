@@ -31,9 +31,9 @@ jobs:
 
     steps:
       - checkout
-      - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
-      - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
-      - run: gcloud container clusters get-credentials standard-cluster-1 --zone us-central1-a --project rxjs-fiddle
+      - run: echo ${K8S_SERVICE_KEY} > keyfile.json
+      - run: gcloud auth activate-service-account ${K8S_SERVICE_NAME} --key-file keyfile.json
+      - run: gcloud container clusters get-credentials shared-cluster --zone us-central1-a --project k8s-cluster-244003
       - run: RXJS_FIDDLE_NS=<< parameters.ns >> RXJS_FIDDLE_HOST=<< parameters.host >> RXJS_FIDDLE_VERSION=<< parameters.version >> ./deploy-all.sh
 
 workflows:
