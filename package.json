@@ -1,0 +1,23 @@
+{
+  "dependencies": {
+    "express": "^4.17.1",
+    "rxjs": "^6.4.0"
+  },
+  "name": "rxjs-fiddle-backend",
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sfishel18/rxjs-fiddle-backend.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sfishel18/rxjs-fiddle-backend/issues"
+  },
+  "homepage": "https://github.com/sfishel18/rxjs-fiddle-backend#readme",
+  "description": ""
+}
