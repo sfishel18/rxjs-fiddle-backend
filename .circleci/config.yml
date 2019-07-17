@@ -34,7 +34,7 @@ jobs:
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
       - run: export RXJS_FIDDLE_ENV=<< parameters.env >>
       - run: export RXJS_FIDDLE_VERSION=<< parameters.version >>
-      - run: echo $RXJS_FIDDLE_VERSION
+      - run: echo env
       - run: kubectl apply -f k8s/
 
 workflows:
