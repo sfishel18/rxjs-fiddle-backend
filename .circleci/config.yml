@@ -32,8 +32,6 @@ jobs:
       - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
-      - run: export RXJS_FIDDLE_ENV=<< parameters.env >>
-      - run: export RXJS_FIDDLE_VERSION=<< parameters.version >>
       - run: env
       - run: kubectl apply -f k8s/
 
@@ -41,8 +39,9 @@ workflows:
   Deploy to Staging for Commits to Master:
     jobs:
       - Deploy:
-          env: staging
-          version: ${CIRCLE_SHA1}
+          environment:
+            RXJS_FIDDLE_ENV: staging
+            RXJS_FIDDLE_VERSION: ${CIRCLE_SHA1}
           filters:
             branches:
               only: master
