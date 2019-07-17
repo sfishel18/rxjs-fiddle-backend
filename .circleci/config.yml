@@ -22,7 +22,7 @@ jobs:
         type: string
 
     docker:
-      - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.7
+      - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.11
         auth:
           username: _json_key
           password: ${GCLOUD_SERVICE_KEY}
