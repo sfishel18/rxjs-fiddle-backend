@@ -16,9 +16,7 @@ jobs:
       - run: git push origin --tags
   Deploy:
     parameters:
-      ns:
-        type: string
-      host:
+      env:
         type: string
       version:
         type: string
@@ -31,17 +29,18 @@ jobs:
 
     steps:
       - checkout
-      - run: echo ${K8S_SERVICE_KEY} > keyfile.json
-      - run: gcloud auth activate-service-account ${K8S_SERVICE_NAME} --key-file keyfile.json
-      - run: gcloud container clusters get-credentials shared-cluster --zone us-central1-a --project k8s-cluster-244003
-      - run: RXJS_FIDDLE_NS=<< parameters.ns >> RXJS_FIDDLE_HOST=<< parameters.host >> RXJS_FIDDLE_VERSION=<< parameters.version >> ./deploy-all.sh
+      - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
+      - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
+      - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
+      - run: export RXJS_FIDDLE_ENV=<< parameters.env >>
+      - run: export RXJS_FIDDLE_VERSION=<< parameters.version >>
+      - run: kubectl apply -f k8s/
 
 workflows:
   Deploy to Staging for Commits to Master:
     jobs:
       - Deploy:
-          ns: rxjs-fiddle-staging
-          host: api-staging.rxjs-fiddle.com
+          env: staging
           version: ${CIRCLE_SHA1}
           filters:
             branches:
@@ -63,8 +62,7 @@ workflows:
   Deploy to Production for Tags:
     jobs:
       - Deploy:
-          ns: rxjs-fiddle-prod
-          host: api.rxjs-fiddle.com
+          env: default
           version: ${CIRCLE_TAG}
           filters:
             tags:

@@ -4,7 +4,7 @@ const echo = require("./functions/echo");
 const functions = { echo };
 
 const meta = {
-  ns: process.env.RXJS_FIDDLE_NS,
+  env: process.env.RXJS_FIDDLE_ENV,
   version: process.env.RXJS_FIDDLE_VERSION
 };
 
