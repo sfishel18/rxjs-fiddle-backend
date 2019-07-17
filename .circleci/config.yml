@@ -15,12 +15,6 @@ jobs:
       - run: gitversion bump auto
       - run: git push origin --tags
   Deploy:
-    parameters:
-      env:
-        type: string
-      version:
-        type: string
-
     docker:
       - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.11
         auth:
