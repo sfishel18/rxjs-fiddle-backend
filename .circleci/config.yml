@@ -15,6 +15,16 @@ jobs:
       - run: gitversion bump auto
       - run: git push origin --tags
   Deploy:
+    parameters:
+      env:
+        type: string
+      version:
+        type: string
+
+    environment:
+      RXJS_FIDDLE_ENV: << parameters.env >>
+      RXJS_FIDDLE_VERSION: << parameters.version >>
+
     docker:
       - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.11
         auth:
@@ -26,16 +36,15 @@ jobs:
       - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
-      - run: env
+      - run: echo env
       - run: kubectl apply -f k8s/
 
 workflows:
   Deploy to Staging for Commits to Master:
     jobs:
       - Deploy:
-          environment:
-            RXJS_FIDDLE_ENV: staging
-            RXJS_FIDDLE_VERSION: ${CIRCLE_SHA1}
+          env: staging
+          version: ${CIRCLE_SHA1}
           filters:
             branches:
               only: master
