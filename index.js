@@ -4,8 +4,8 @@ const echo = require("./functions/echo");
 const functions = { echo };
 
 const meta = {
-  env: process.env.RXJS_FIDDLE_ENV,
-  version: process.env.RXJS_FIDDLE_VERSION
+  env: process.env.ENVIRONMENT_NAME,
+  version: process.env.API_VERSION
 };
 
 const app = express();

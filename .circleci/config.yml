@@ -1,5 +1,22 @@
 version: 2.1
 jobs:
+  Build and Publish Image:
+    parameters:
+      tag:
+        type: string
+        default: latest
+
+    docker:
+      - image: docker:latest
+
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: echo "${GCLOUD_SERVICE_KEY}" | docker login -u _json_key --password-stdin https://gcr.io
+      - run: docker build -t gcr.io/rxjs-fiddle/backend:<< parameters.tag >> -f Dockerfile .
+      - run: docker push gcr.io/rxjs-fiddle/backend:<< parameters.tag >>
+
   Bump Git Tag:
     docker:
       - image: gcr.io/rxjs-fiddle/ci/gitversion:0.0.8
@@ -20,13 +37,16 @@ jobs:
         type: string
       version:
         type: string
+      image-tag:
+        type: string
 
     environment:
-      RXJS_FIDDLE_ENV: << parameters.env >>
-      RXJS_FIDDLE_VERSION: << parameters.version >>
+      ENVIRONMENT_NAME: << parameters.env >>
+      API_VERSION: << parameters.version >>
+      IMAGE_TAG: << parameters.image-tag >>
 
     docker:
-      - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.11
+      - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.12
         auth:
           username: _json_key
           password: ${GCLOUD_SERVICE_KEY}
@@ -37,14 +57,21 @@ jobs:
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
       - run: echo ${RXJS_FIDDLE_VERSION}
-      - run: kubectl apply -n ${RXJS_FIDDLE_ENV} -f k8s/
+      - run: envsubst < k8s/deployment.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
+      - run: envsubst < k8s/service.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
 
 workflows:
   Deploy to Staging for Commits to Master:
     jobs:
+      - Build and Publish Image:
+          tag: latest
+          filters:
+            branches:
+              only: master
       - Deploy:
           env: staging
           version: ${CIRCLE_SHA1}
+          image-tag: latest
           filters:
             branches:
               only: master
@@ -64,9 +91,17 @@ workflows:
 
   Deploy to Production for Tags:
     jobs:
+      - Build and Publish Image:
+          tag: ${CIRCLE_TAG}
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
       - Deploy:
           env: default
           version: ${CIRCLE_TAG}
+          image-tag: ${CIRCLE_TAG}
           filters:
             tags:
               only: /.*/
