@@ -42,7 +42,6 @@ jobs:
 
     environment:
       ENVIRONMENT_NAME: << parameters.env >>
-      # API_VERSION: << parameters.version >>
       IMAGE_TAG: << parameters.image-tag >>
 
     docker:
@@ -103,6 +102,8 @@ workflows:
           env: default
           version: ${CIRCLE_TAG}
           image-tag: ${CIRCLE_TAG}
+          requires:
+            - Build and Publish Image
           filters:
             tags:
               only: /.*/
