@@ -42,7 +42,7 @@ jobs:
 
     environment:
       ENVIRONMENT_NAME: << parameters.env >>
-      API_VERSION: << parameters.version >>
+      # API_VERSION: << parameters.version >>
       IMAGE_TAG: << parameters.image-tag >>
 
     docker:
@@ -56,8 +56,7 @@ jobs:
       - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
-      - run: echo ${RXJS_FIDDLE_VERSION}
-      - run: envsubst < k8s/deployment.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
+      - run: API_VERSION=<< parameters.version >> envsubst < k8s/deployment.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
       - run: envsubst < k8s/service.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
 
 workflows:
@@ -72,6 +71,8 @@ workflows:
           env: staging
           version: ${CIRCLE_SHA1}
           image-tag: latest
+          requires:
+            - Build and Publish Image
           filters:
             branches:
               only: master
