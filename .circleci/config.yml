@@ -40,10 +40,6 @@ jobs:
       image-tag:
         type: string
 
-    environment:
-      ENVIRONMENT_NAME: << parameters.env >>
-      IMAGE_TAG: << parameters.image-tag >>
-
     docker:
       - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.12
         auth:
@@ -55,9 +51,8 @@ jobs:
       - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
-      - run: export API_VERSION=<< parameters.version >>
-      - run: envsubst < k8s/deployment.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
-      - run: envsubst < k8s/service.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
+      - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/deployment.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
+      - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/service.yml | kubectl apply -n ${ENVIRONMENT_NAME} -f -
 
 workflows:
   Deploy to Staging for Commits to Master:
