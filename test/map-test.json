@@ -1,0 +1,3 @@
+{
+  "source": "interval(1000).pipe(take(4), map(x => { if (x > 2) { throw new Error(\"oh noes\"); } return x * 10; })).subscribe(x => console.log(x));"
+}

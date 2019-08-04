@@ -1,8 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const echo = require("./functions/echo");
+const runFiddle = require("./functions/run-fiddle");
 
-const functions = { echo };
+const functions = { echo, "run-fiddle": runFiddle };
 
 const meta = {
   env: process.env.ENVIRONMENT_NAME,
