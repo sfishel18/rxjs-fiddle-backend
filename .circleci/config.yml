@@ -61,6 +61,23 @@ jobs:
       - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/deployment.yml | kubectl apply -n << parameters.env >> -f -
       - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/service.yml | kubectl apply -n << parameters.env >> -f -
       - run: kubectl annotate -n << parameters.env >> deployment/rxjs-fiddle-backend-deployment kubernetes.io/change-cause="image updated to << parameters.version >>"
+  Rollback:
+    parameters:
+      env:
+        type: string
+
+    docker:
+      - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.12
+        auth:
+          username: _json_key
+          password: ${GCLOUD_SERVICE_KEY}
+
+    steps:
+      - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
+      - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
+      - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
+      - run: kc rollout undo -n << parameters.env >> deployment/rxjs-fiddle-backend-deployment   
+
 
 workflows:
   Deploy to Staging for Commits to Master:
@@ -80,7 +97,7 @@ workflows:
           filters:
             branches:
               only: master
-      - hold:
+      - Hold for Deploy To Production:
           type: approval
           requires:
             - Deploy
@@ -89,7 +106,7 @@ workflows:
               only: master
       - Bump Git Tag:
           requires:
-            - hold
+            - Hold for Deploy To Production
           filters:
             branches:
               only: master
@@ -109,6 +126,24 @@ workflows:
           image-tag: ${CIRCLE_TAG}
           requires:
             - Build and Publish Image
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - Hold for Rollback:
+          type: approval
+            requires:
+              - Deploy
+            filters:
+              tags:
+                only: /.*/
+              branches:
+                ignore: /.*/
+      - Rollback:
+          env: default
+          requires:
+            - Hold for Rollback
           filters:
             tags:
               only: /.*/
