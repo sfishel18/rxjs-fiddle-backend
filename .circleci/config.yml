@@ -111,40 +111,25 @@ workflows:
               only: master
 
   Deploy to Production for Tags:
+    filters:
+      tags:
+        only: /.*/
+      branches:
+        ignore: /.*/
     jobs:
       - Build and Publish Image:
           tag: ${CIRCLE_TAG}
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
       - Deploy:
           env: default
           version: ${CIRCLE_TAG}
           image-tag: ${CIRCLE_TAG}
           requires:
             - Build and Publish Image
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
       - Hold for Rollback:
           type: approval
           requires:
             - Deploy
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
       - Rollback:
           env: default
           requires:
             - Hold for Rollback
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
