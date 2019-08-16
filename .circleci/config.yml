@@ -60,6 +60,7 @@ jobs:
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
       - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/deployment.yml | kubectl apply -n << parameters.env >> -f -
       - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/service.yml | kubectl apply -n << parameters.env >> -f -
+      - run: kubectl annotate -n << parameters.env >> deployment/rxjs-fiddle-backend-deployment kubernetes.io/change-cause="image updated to << parameters.version >>"
 
 workflows:
   Deploy to Staging for Commits to Master:
