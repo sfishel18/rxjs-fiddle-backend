@@ -12,15 +12,27 @@ const {
 } = require("rxjs/operators");
 const vm = require("vm");
 
-const COMPLETE = "__COMPLETE__";
-const ERROR = "__ERROR__";
+const COMPLETE = Symbol("__COMPLETE__");
+const ERROR = Symbol("__ERROR__");
+
+const processCollectedEvent = ({ timestamp, value }) => {
+  if (value === COMPLETE) {
+    return { timestamp, type: "complete" };
+  }
+  if (value === ERROR) {
+    return { timestamp, type: "error" };
+  }
+  return { timestamp, type: "value", value };
+};
 
 const collectOutput = (collectFn, scheduler) => source =>
   source.pipe(
     endWith(COMPLETE),
     catchError(() => [ERROR]),
     timestamp(scheduler),
-    tap(output => collectFn(pick(output, "timestamp", "value"))),
+    tap(output =>
+      collectFn(processCollectedEvent(pick(output, "timestamp", "value")))
+    ),
     pluck("value"),
     filter(value => value !== COMPLETE && value !== ERROR)
   );
