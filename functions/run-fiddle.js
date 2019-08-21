@@ -1,6 +1,6 @@
-const { mapValues, pick } = require("lodash");
-const rxjsStaticImports = require("rxjs");
-const rxjsOperatorImports = require("rxjs/operators");
+const { includes, mapValues, omit, pick } = require("lodash");
+const rxjsStaticFunctions = require("rxjs");
+const rxjsOperators = require("rxjs/operators");
 const { VirtualTimeScheduler } = require("rxjs");
 const {
   endWith,
@@ -14,6 +14,45 @@ const vm = require("vm");
 
 const COMPLETE = Symbol("__COMPLETE__");
 const ERROR = Symbol("__ERROR__");
+
+const STATIC_FUNCTIONS_THAT_TAKE_SCHEDULER = [
+  "bindCallback",
+  "bindNodeCallback",
+  "combineLatest",
+  "concat",
+  "from",
+  "generate",
+  "interval",
+  "merge",
+  "of",
+  "pairs",
+  "range",
+  "scheduled",
+  "throwError",
+  "timer"
+];
+
+const UNSUPPORTED_STATIC_FUNCTIONS = ["fromEvent", "fromEventPattern"];
+
+const OPERATORS_THAT_TAKE_SCHEDULER = [
+  "auditTime",
+  "debounceTime",
+  "delay",
+  "endWith",
+  "expand",
+  "publishReplay",
+  "sampleTime",
+  "shareReplay",
+  "startWith",
+  "throttleTime", // <-- as second of three possible args...
+  "timeInterval",
+  "timeout",
+  "timeoutWith",
+  "timestamp",
+  "windowTime"
+];
+
+const UNSUPPORTED_OPERATORS = ["subscribeOn", "observeOn"];
 
 const processCollectedEvent = ({ timestamp, value }) => {
   if (value === COMPLETE) {
@@ -42,25 +81,37 @@ const runCode = code => {
   const output = [];
 
   const context = {
-    ...mapValues(rxjsStaticImports, (fn, name) => {
-      return (...args) => {
-        const entry = { name, events: [] };
-        output.push(entry);
-        return fn(...args, scheduler).pipe(
-          collectOutput(val => entry.events.push(val), scheduler)
-        );
-      };
-    }),
-    ...mapValues(rxjsOperatorImports, (fn, name) => {
-      return (...args) => source => {
-        const entry = { name, events: [] };
-        output.push(entry);
-        return source.pipe(
-          fn(...args),
-          collectOutput(val => entry.events.push(val), scheduler)
-        );
-      };
-    })
+    ...omit(
+      mapValues(rxjsStaticFunctions, (fn, name) => {
+        return (...args) => {
+          const entry = { name, events: [] };
+          const allArgs = includes(STATIC_FUNCTIONS_THAT_TAKE_SCHEDULER, name)
+            ? [...args, scheduler]
+            : args;
+          output.push(entry);
+          return fn(...allArgs, scheduler).pipe(
+            collectOutput(val => entry.events.push(val), scheduler)
+          );
+        };
+      }),
+      UNSUPPORTED_STATIC_FUNCTIONS
+    ),
+    ...omit(
+      mapValues(rxjsOperators, (fn, name) => {
+        return (...args) => source => {
+          const entry = { name, events: [] };
+          const allArgs = includes(OPERATORS_THAT_TAKE_SCHEDULER, name)
+            ? [...args, scheduler]
+            : args;
+          output.push(entry);
+          return source.pipe(
+            fn(...allArgs),
+            collectOutput(val => entry.events.push(val), scheduler)
+          );
+        };
+      }),
+      UNSUPPORTED_OPERATORS
+    )
   };
 
   vm.runInNewContext(code, context);
