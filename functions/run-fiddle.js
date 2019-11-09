@@ -20,6 +20,7 @@ const {
   filter
 } = require("rxjs/operators");
 const vm = require("vm");
+const { createColdObservable } = require("./util/marble-parsing");
 
 const COMPLETE = Symbol("COMPLETE");
 const ERROR = Symbol("ERROR");
@@ -100,7 +101,7 @@ const withOutputCollected = (observable, scheduler) => {
   return ret;
 };
 
-const decorateObservable = (observable, name, id, inputArgs) => {
+const decorateObservable = (observable, name, id, inputArgs = []) => {
   observable[ID] = id;
   observable[NAME] = name;
   observable[PIPES] = [];
@@ -163,7 +164,16 @@ const runCode = code => {
         return operatorFn;
       }),
       UNSUPPORTED_OPERATORS
-    )
+    ),
+    cold: marbles => {
+      const ret = withOutputCollected(
+        createColdObservable(marbles, scheduler),
+        scheduler
+      );
+      decorateObservable(ret, "cold", uniqueId("cold-"));
+      observables.push(ret);
+      return ret;
+    }
   };
 
   vm.runInNewContext(code, context);
