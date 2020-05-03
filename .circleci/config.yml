@@ -15,8 +15,8 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          docker_layer_caching: true
-      - run: echo "${GCLOUD_SERVICE_KEY}" | docker login -u _json_key --password-stdin https://gcr.io
+          docker_layer_caching: false
+      - run: echo "${DOCKER_SERVICE_KEY}" | docker login -u _json_key --password-stdin https://gcr.io
       - run: docker build -t gcr.io/rxjs-fiddle/backend:<< parameters.tag >> -f Dockerfile .
       - when:
           condition: << parameters.should-tag-latest >>
@@ -29,7 +29,7 @@ jobs:
       - image: gcr.io/rxjs-fiddle/ci/gitversion:0.0.8
         auth:
           username: _json_key
-          password: ${GCLOUD_SERVICE_KEY}
+          password: ${DOCKER_SERVICE_KEY}
 
     steps:
       - add_ssh_keys:
@@ -51,13 +51,14 @@ jobs:
       - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.12
         auth:
           username: _json_key
-          password: ${GCLOUD_SERVICE_KEY}
+          password: ${DOCKER_SERVICE_KEY}
 
     steps:
       - checkout
-      - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
-      - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
+      - run: echo ${K8S_SERVICE_KEY} > keyfile.json
+      - run: gcloud auth activate-service-account --key-file keyfile.json
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
+      - run: kubectl create -n << parameters.env >> secret docker-registry gcr-auth --docker-server=https://gcr.io --docker-username=_json_key --docker-email=docker@rxjs-fiddle.iam.gserviceaccount.com --docker-password="${DOCKER_SERVICE_KEY}" -o yaml --dry-run | kubectl apply -n << parameters.env >> -f -
       - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/deployment.yml | kubectl apply -n << parameters.env >> -f -
       - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/service.yml | kubectl apply -n << parameters.env >> -f -
       - run: kubectl annotate -n << parameters.env >> deployment/rxjs-fiddle-backend-deployment kubernetes.io/change-cause="image updated to << parameters.version >>"
@@ -70,11 +71,11 @@ jobs:
       - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.12
         auth:
           username: _json_key
-          password: ${GCLOUD_SERVICE_KEY}
+          password: ${DOCKER_SERVICE_KEY}
 
     steps:
-      - run: echo ${GCLOUD_SERVICE_KEY} > keyfile.json
-      - run: gcloud auth activate-service-account ${GCLOUD_SERVICE_NAME} --key-file keyfile.json
+      - run: echo ${K8S_SERVICE_KEY} > keyfile.json
+      - run: gcloud auth activate-service-account --key-file keyfile.json
       - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
       - run: kubectl rollout undo -n << parameters.env >> deployment/rxjs-fiddle-backend-deployment
 
@@ -88,7 +89,7 @@ workflows:
             branches:
               only: master
       - Deploy:
-          env: staging
+          env: rxjs-fiddle-stg
           version: ${CIRCLE_SHA1}
           image-tag: ${CIRCLE_SHA1}
           requires:
@@ -120,7 +121,7 @@ workflows:
             branches:
               ignore: /.*/
       - Deploy:
-          env: default
+          env: rxjs-fiddle-prod
           version: ${CIRCLE_TAG}
           image-tag: ${CIRCLE_TAG}
           requires:
@@ -140,7 +141,7 @@ workflows:
             branches:
               ignore: /.*/
       - Rollback:
-          env: default
+          env: rxjs-fiddle-prod
           requires:
             - Hold for Rollback
           filters:

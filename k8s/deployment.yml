@@ -24,3 +24,5 @@ spec:
               value: ${ENVIRONMENT_NAME}
             - name: API_VERSION
               value: ${API_VERSION}
+      imagePullSecrets:
+        - name: gcr-auth
