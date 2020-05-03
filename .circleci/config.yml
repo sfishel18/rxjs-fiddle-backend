@@ -57,7 +57,7 @@ jobs:
       - checkout
       - run: echo ${K8S_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account --key-file keyfile.json
-      - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
+      - run: gcloud container clusters get-credentials my-gke-cluster --zone us-west1-a --project k8s-cluster-275622
       - run: kubectl create -n << parameters.env >> secret docker-registry gcr-auth --docker-server=https://gcr.io --docker-username=_json_key --docker-email=docker@rxjs-fiddle.iam.gserviceaccount.com --docker-password="${DOCKER_SERVICE_KEY}" -o yaml --dry-run | kubectl apply -n << parameters.env >> -f -
       - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/deployment.yml | kubectl apply -n << parameters.env >> -f -
       - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> envsubst < k8s/service.yml | kubectl apply -n << parameters.env >> -f -
@@ -76,7 +76,7 @@ jobs:
     steps:
       - run: echo ${K8S_SERVICE_KEY} > keyfile.json
       - run: gcloud auth activate-service-account --key-file keyfile.json
-      - run: gcloud container clusters get-credentials rxjs-fiddle-cluster --zone us-central1-a --project rxjs-fiddle
+      - run: gcloud container clusters get-credentials my-gke-cluster --zone us-west1-a --project k8s-cluster-275622
       - run: kubectl rollout undo -n << parameters.env >> deployment/rxjs-fiddle-backend-deployment
 
 workflows:
