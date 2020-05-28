@@ -3,7 +3,8 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "lodash": "^4.17.15",
-    "rxjs": "^6.4.0"
+    "rxjs": "^6.4.0",
+    "signalfx-tracing": "^0.7.0"
   },
   "name": "rxjs-fiddle-backend",
   "version": "0.1.0",

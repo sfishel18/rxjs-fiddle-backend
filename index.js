@@ -1,3 +1,8 @@
+require('signalfx-tracing').init({
+  service: 'rxjs-fiddle-backend',
+  url: process.env.SIGNALFX_AGENT_HOST,
+});
+
 const express = require("express");
 const cors = require("cors");
 const echo = require("./functions/echo");
