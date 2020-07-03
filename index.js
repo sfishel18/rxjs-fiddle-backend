@@ -1,6 +1,6 @@
 require('signalfx-tracing').init({
   service: 'rxjs-fiddle-backend',
-  url: `'http://${process.env.SIGNALFX_AGENT_HOST}:9080/v2/trace`,
+  url: `'http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`,
 });
 
 const express = require("express");
