@@ -3,9 +3,6 @@ require('signalfx-tracing').init({
   url: `http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`,
 });
 
-console.log('HELLO');
-console.log('Tracing URL is', `http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`);
-
 const express = require("express");
 const cors = require("cors");
 const echo = require("./functions/echo");
