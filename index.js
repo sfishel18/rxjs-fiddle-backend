@@ -1,7 +1,10 @@
 require('signalfx-tracing').init({
   service: 'rxjs-fiddle-backend',
-  url: `'http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`,
+  url: `http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`,
 });
+
+console.log('HELLO');
+console.log('Tracing URL is', `http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`);
 
 const express = require("express");
 const cors = require("cors");
