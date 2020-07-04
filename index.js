@@ -5,7 +5,7 @@ require('signalfx-tracing').init({
 
 const express = require("express");
 const cors = require("cors");
-const proxy = require("http-proxy-middleware");
+const { createProxyMiddleware } = require("http-proxy-middleware");
 const echo = require("./functions/echo");
 const runFiddle = require("./functions/run-fiddle");
 
@@ -21,7 +21,7 @@ const port = process.env.PORT || 8080;
 app.use(express.json());
 app.use(cors());
 
-app.use("/sendTrace", proxy(`http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`));
+app.use("/v1/trace", createProxyMiddleware(`http://${process.env.SIGNALFX_AGENT_HOST}:9080/`));
 
 Object.keys(functions).forEach(name => {
   app.all(`/${name}`, (req, res) => {
