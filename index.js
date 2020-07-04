@@ -19,11 +19,12 @@ const meta = {
 const app = express();
 const port = process.env.PORT || 8080;
 app.use(express.json());
+app.use(cors());
 
-app.use("/sendTrace", cors(), proxy(`http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`));
+app.use("/sendTrace", proxy(`http://${process.env.SIGNALFX_AGENT_HOST}:9080/v1/trace`));
 
 Object.keys(functions).forEach(name => {
-  app.all(`/${name}`, cors(), (req, res) => {
+  app.all(`/${name}`, (req, res) => {
     const ret = functions[name]({ data: req.body });
     if (ret instanceof Promise) {
       ret.then(response => res.json({ response, meta }));
