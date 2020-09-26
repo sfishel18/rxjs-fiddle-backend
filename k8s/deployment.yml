@@ -24,6 +24,8 @@ spec:
               value: ${ENVIRONMENT_NAME}
             - name: API_VERSION
               value: ${API_VERSION}
+            - name: SIGNALFX_TOKEN
+              value: ${SIGNALFX_TOKEN}
             - name: SIGNALFX_AGENT_HOST
               valueFrom:
                 fieldRef:
