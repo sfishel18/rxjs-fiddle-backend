@@ -15,10 +15,6 @@ jobs:
           docker_layer_caching: false
       - run: echo "${DOCKER_SERVICE_KEY}" | docker login -u _json_key --password-stdin https://gcr.io
       - run: docker build -t gcr.io/rxjs-fiddle/backend:<< parameters.tag >> -f Dockerfile .
-      - when:
-          condition: << parameters.should-tag-latest >>
-          steps:
-            - run: docker build -t gcr.io/rxjs-fiddle/backend:latest -f Dockerfile .
       - run: docker push gcr.io/rxjs-fiddle/backend:<< parameters.tag >>
 
   Bump Git Tag:
