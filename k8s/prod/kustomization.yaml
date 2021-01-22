@@ -1,0 +1,15 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+bases:
+  - ../base
+namespace: rxjs-fiddle-prod
+nameSuffix: -prod
+configMapGenerator:
+  - name: rxjs-fiddle-backend-env-config
+    literals:
+      - ENVIRONMENT_NAME=prod
+      - API_VERSION=latest
+resources:
+  - image-pull-secret.yaml
+patchesStrategicMerge:
+  - set-image-pull-secret.yaml
