@@ -5,9 +5,6 @@ jobs:
       tag:
         type: string
         default: latest
-      should-tag-latest:
-        type: boolean
-        default: false
 
     docker:
       - image: docker:latest
@@ -22,7 +19,7 @@ jobs:
           condition: << parameters.should-tag-latest >>
           steps:
             - run: docker build -t gcr.io/rxjs-fiddle/backend:latest -f Dockerfile .
-      - run: docker push gcr.io/rxjs-fiddle/backend
+      - run: docker push gcr.io/rxjs-fiddle/backend:<< parameters.tag >>
 
   Bump Git Tag:
     docker:
@@ -38,75 +35,25 @@ jobs:
       - checkout
       - run: gitversion bump auto
       - run: git push origin --tags
-  Deploy:
-    parameters:
-      env:
-        type: string
-      version:
-        type: string
-      image-tag:
-        type: string
-
-    docker:
-      - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.12
-        auth:
-          username: _json_key
-          password: ${DOCKER_SERVICE_KEY}
-
-    steps:
-      - checkout
-      - run: echo ${K8S_SERVICE_KEY} > keyfile.json
-      - run: gcloud auth activate-service-account --key-file keyfile.json
-      - run: gcloud container clusters get-credentials my-gke-cluster --zone us-west1-a --project k8s-cluster-275622
-      - run: kubectl create -n << parameters.env >> secret docker-registry gcr-auth --docker-server=https://gcr.io --docker-username=_json_key --docker-email=docker@rxjs-fiddle.iam.gserviceaccount.com --docker-password="${DOCKER_SERVICE_KEY}" -o yaml --dry-run | kubectl apply -n << parameters.env >> -f -
-      - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> SIGNALFX_TOKEN=${SIGNALFX_TOKEN} envsubst < k8s/deployment.yml | kubectl apply -n << parameters.env >> -f -
-      - run: API_VERSION=<< parameters.version >> ENVIRONMENT_NAME=<< parameters.env >> IMAGE_TAG=<< parameters.image-tag >> SIGNALFX_TOKEN=${SIGNALFX_TOKEN} envsubst < k8s/service.yml | kubectl apply -n << parameters.env >> -f -
-      - run: kubectl annotate -n << parameters.env >> deployment/rxjs-fiddle-backend-deployment kubernetes.io/change-cause="image updated to << parameters.version >>"
-  Rollback:
-    parameters:
-      env:
-        type: string
-
-    docker:
-      - image: gcr.io/rxjs-fiddle/ci/gcloud:0.0.12
-        auth:
-          username: _json_key
-          password: ${DOCKER_SERVICE_KEY}
-
-    steps:
-      - run: echo ${K8S_SERVICE_KEY} > keyfile.json
-      - run: gcloud auth activate-service-account --key-file keyfile.json
-      - run: gcloud container clusters get-credentials my-gke-cluster --zone us-west1-a --project k8s-cluster-275622
-      - run: kubectl rollout undo -n << parameters.env >> deployment/rxjs-fiddle-backend-deployment
 
 workflows:
-  Deploy to Staging for Commits to Master:
+  Tag Latest Image for Commits to Master:
     jobs:
       - Build and Publish Image:
-          tag: ${CIRCLE_SHA1}
-          should-tag-latest: true
+          tag: latest
           filters:
             branches:
               only: master
-      - Deploy:
-          env: rxjs-fiddle-stg
-          version: ${CIRCLE_SHA1}
-          image-tag: ${CIRCLE_SHA1}
+      - Hold for Publish To Production:
+          type: approval
           requires:
             - Build and Publish Image
           filters:
             branches:
               only: master
-      - Hold for Deploy To Production:
-          type: approval
-          requires:
-            - Deploy
-          filters:
-            branches:
-              only: master
       - Bump Git Tag:
           requires:
-            - Hold for Deploy To Production
+            - Hold for Publish To Production
           filters:
             branches:
               only: master
@@ -115,35 +62,6 @@ workflows:
     jobs:
       - Build and Publish Image:
           tag: ${CIRCLE_TAG}
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - Deploy:
-          env: rxjs-fiddle-prod
-          version: ${CIRCLE_TAG}
-          image-tag: ${CIRCLE_TAG}
-          requires:
-            - Build and Publish Image
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - Hold for Rollback:
-          type: approval
-          requires:
-            - Deploy
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - Rollback:
-          env: rxjs-fiddle-prod
-          requires:
-            - Hold for Rollback
           filters:
             tags:
               only: /.*/
