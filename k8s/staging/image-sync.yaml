@@ -17,8 +17,8 @@ metadata:
 spec:
   imageRepositoryRef:
     name: rxjs-fiddle-backend
-  policy:
-    filterTags:
+  filterTags:
       pattern: "rc-.*"
+  policy:
     semver:
       range: "*"
