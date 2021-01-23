@@ -20,5 +20,5 @@ spec:
   filterTags:
       pattern: "rc-.*"
   policy:
-    semver:
-      range: "*"
+    alphabetical:
+      order: asc
