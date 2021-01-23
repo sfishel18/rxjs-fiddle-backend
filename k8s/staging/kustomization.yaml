@@ -11,5 +11,6 @@ configMapGenerator:
       - API_VERSION=latest
 resources:
   - image-pull-secret.yaml
+  - image-sync.yaml
 patchesStrategicMerge:
   - set-image-pull-secret.yaml
