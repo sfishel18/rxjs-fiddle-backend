@@ -16,7 +16,7 @@ metadata:
   namespace: rxjs-fiddle-stg
 spec:
   imageRepositoryRef:
-    name: rxjs-fiddle-backend
+    name: rxjs-fiddle-backend-stg
   filterTags:
       pattern: "rc-.*"
   policy:
