@@ -29,7 +29,7 @@ jobs:
           fingerprints:
             - "19:86:7d:89:ad:2b:24:95:d5:fe:59:1a:92:46:4f:02"
       - checkout
-      - run: gitversion --prefix "rc-" bump patch
+      - run: gitversion --prefix "0.0.0-rc" bump patch
       - run: git push origin --tags
 
   Bump Git Tag:
