@@ -17,6 +17,21 @@ jobs:
       - run: docker build -t gcr.io/rxjs-fiddle/backend:<< parameters.tag >> -f Dockerfile .
       - run: docker push gcr.io/rxjs-fiddle/backend:<< parameters.tag >>
 
+  Bump Release Candidate Git Tag:
+    docker:
+      - image: gcr.io/rxjs-fiddle/ci/gitversion:0.0.8
+        auth:
+          username: _json_key
+          password: ${DOCKER_SERVICE_KEY}
+
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "19:86:7d:89:ad:2b:24:95:d5:fe:59:1a:92:46:4f:02"
+      - checkout
+      - run: gitversion --prefix "rc-" bump patch
+      - run: git push origin --tags
+
   Bump Git Tag:
     docker:
       - image: gcr.io/rxjs-fiddle/ci/gitversion:0.0.8
@@ -33,26 +48,39 @@ jobs:
       - run: git push origin --tags
 
 workflows:
-  Tag Latest Image for Commits to Master:
+  Tag Release Candidate for Commits to Master:
     jobs:
-      - Build and Publish Image:
-          tag: latest
+      - Bump Release Candidate Git Tag:
           filters:
             branches:
               only: master
+
+  Publish Release Candidate Image:
+    jobs:
+      - Build and Publish Image:
+          tag: ${CIRCLE_TAG}
+          filters:
+            tags:
+              only: /rc-.*/
+            branches:
+              ignore: /.*/
       - Hold for Publish To Production:
           type: approval
           requires:
             - Build and Publish Image
           filters:
+            tags:
+              only: /rc-.*/
             branches:
-              only: master
+              ignore: /.*/
       - Bump Git Tag:
           requires:
             - Hold for Publish To Production
           filters:
+            tags:
+              only: /rc-.*/
             branches:
-              only: master
+              ignore: /.*/
 
   Deploy to Production for Tags:
     jobs:
@@ -60,6 +88,6 @@ workflows:
           tag: ${CIRCLE_TAG}
           filters:
             tags:
-              only: /.*/
+              ignore: /rc-.*/
             branches:
               ignore: /.*/
