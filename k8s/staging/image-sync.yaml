@@ -1,0 +1,24 @@
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImageRepository
+metadata:
+  name: rxjs-fiddle-backend
+  namespace: rxjs-fiddle-stg
+spec:
+  image: gcr.io/rxjs-fiddle/backend
+  interval: 10m0s
+  secretRef:
+    name: rxjs-fiddle-image-pull-secret-stg
+---
+apiVersion: image.toolkit.fluxcd.io/v1alpha1
+kind: ImagePolicy
+metadata:
+  name: rxjs-fiddle-backend
+  namespace: rxjs-fiddle-stg
+spec:
+  imageRepositoryRef:
+    name: rxjs-fiddle-backend
+  policy:
+    filterTags:
+      pattern: "rc-.*"
+    semver:
+      range: "*"
