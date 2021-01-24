@@ -18,7 +18,8 @@ spec:
   imageRepositoryRef:
     name: rxjs-fiddle-backend-stg
   filterTags:
-      pattern: "0.0.0-rc.*"
+      pattern: "^rc(.*)"
+      extract: "$1"
   policy:
     semver:
       range: "*"
